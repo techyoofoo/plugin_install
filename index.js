@@ -90,13 +90,19 @@ app.post("/un-zip", upload.single("file"), function(req, res) {
     // console.log("------Menu List----", menuName.Comissions);
     console.log(Object.entries(menuName));
     for (const [key, value] of Object.entries(menuName)) {
-       // "a 5", "b 7", "c 9";
+      // "a 5", "b 7", "c 9";
       const splitMenuVal = value.split("./");
       console.log(`${key} ${value}`, splitMenuVal[1]);
-      const v = `<li><i className="fa fa-caret-right rightarrow" aria-hidden="true"></i> <Link to="/${splitMenuVal[1]}">${key}</Link></li>`;
+      const v = `<li><i className="fa fa-caret-right rightarrow" aria-hidden="true"></i> <Link to="/${
+        splitMenuVal[1]
+      }">${key}</Link></li>`;
       console.log("---Menu Link---", v);
-      const itrMenuPath = `import ${key} from "../extract_plugins/${folder_name}/${splitMenuVal[1]}";`;
-      const itrRoutePath = `<Route exact path="/${splitMenuVal[1]}" component={${key}} />`
+      const itrMenuPath = `import ${key} from "../extract_plugins/${folder_name}/${
+        splitMenuVal[1]
+      }";`;
+      const itrRoutePath = `<Route exact path="/${
+        splitMenuVal[1]
+      }" component={${key}} />`;
       importMenuPath.push(itrMenuPath);
       routesPath.push(itrRoutePath);
       menuItems.push(v);
@@ -125,7 +131,7 @@ app.post("/un-zip", upload.single("file"), function(req, res) {
     .toString();
   //.split("\n");
   //Sub menu adding -----------------------
-  const sideNavAppendData = `<input type="hidden" id="1" />`;  
+  const sideNavAppendData = `<input type="hidden" id="1" />`;
   const indxOfSideNav = sidNavPlug.indexOf(sideNavAppendData);
   //const newDta =sidNavPlug.substr(0, indxOfSideNav+sideNavAppendData.length) + "\n" +splitMenuVal + (sidNavPlug.substr(indxOfSideNav+sideNavAppendData.length));
   //Sub menu adding -----------------------
@@ -134,7 +140,7 @@ app.post("/un-zip", upload.single("file"), function(req, res) {
   //   0,
   //   splitMenuVal
   // );
-  
+
   //var webtext1 = sidNavPlug.join("\n");
   const findtext = "</Accordion>";
   const lastIndex = sidNavPlug.lastIndexOf(findtext);
@@ -187,15 +193,67 @@ app.post("/un-zip", upload.single("file"), function(req, res) {
 
 app.post("/uninstallapp", function(req, res) {
   console.log("Request ", req.body);
+  const pluginName = req.body.pluginName.toLowerCase();
+  // Check Manifest file and get menu names and bind to plugin
+  const chkManfiestFile = fs
+    .readFileSync(`${extractPluginPath}/${pluginName}/manifest.json`)
+    .toString();
+  const parseManifest = JSON.parse(chkManfiestFile);
+  console.log("----Menu Extraction-----", parseManifest.menu);
+  const loadMnuLst = parseManifest.menu;
+  //Iterate and form menu's
+  //After fetching info remove files from sidebar and root.component files
+  let unInstallSideBarMenuItem = [];
+  let unInstallImportMenuItem = [];
+  let unInstallRoutePath = [];
+  loadMnuLst.map(objUnInstallMenuName => {
+    for (const [key, value] of Object.entries(objUnInstallMenuName)) {
+      console.log(`${key} ${value}`);
+      const splitUnInstallMenuVal = value.split("./");
+      const unInstallItrSideBarPath = `<li><i className="fa fa-caret-right rightarrow" aria-hidden="true"></i> <Link to="/${
+        splitUnInstallMenuVal[1]
+      }">${key}</Link></li>`;
+      unInstallSideBarMenuItem.push(unInstallItrSideBarPath);
+      const unInstallItrMenuPath = `import ${key} from "../extract_plugins/${pluginName}/${
+        splitUnInstallMenuVal[1]
+      }";`;
+      unInstallImportMenuItem.push(unInstallItrMenuPath);
+      const unInstallItrRoutePath = `<Route exact path="/${
+        splitUnInstallMenuVal[1]
+      }" component={${key}} />`;
+      unInstallRoutePath.push(unInstallItrRoutePath);
+    }
+  });
+
+  const addNewLineSidebar = unInstallSideBarMenuItem.join("\n");
+  const addNewLineImportMenuVal = unInstallImportMenuItem.join("\n");
+  const addNewLineRoutesPathVal = unInstallRoutePath.join("\n");
+  const formatMenu = `<Card>
+                          <Accordion.Toggle as={Card.Header} eventKey="3">
+                            ${parseManifest.plugin_name} <i className="fa fa-angle-down dwnarrow" aria-hidden="true"></i>
+                          </Accordion.Toggle>
+                          <Accordion.Collapse eventKey="3">
+                            <Card.Body>
+                              <div className="leftnavlinks">
+                                <ul>
+                                  <input type="hidden" id="3" />
+                                  ${addNewLineSidebar}
+                                </ul>
+                              </div>
+                            </Card.Body>
+                          </Accordion.Collapse>
+                        </Card>`;
+
   const pa = "/commissions";
   const dataPlugin = fs
     .readFileSync(`${projectFolderPath}src/login/root.component.js`)
     .toString()
     .split("\n");
   const a = req.body;
-  const appendData = `import CommissionsScreen from "../extract_plugins/comission/comission-screen";`;
-  const routPathData = `<Route exact path="${pa}" component={CommissionsScreen} />`;
+  const appendData = addNewLineImportMenuVal;
+  const routPathData = addNewLineRoutesPathVal;
   const inxOfRoutePath = dataPlugin.indexOf(routPathData);
+  
   var dta = dataPlugin.indexOf(appendData);
   if (dta !== -1 && inxOfRoutePath !== -1) {
     var test = dataPlugin.splice(dta, 1);
