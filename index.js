@@ -212,18 +212,41 @@ app.post("/uninstallapp", function(req, res) {
     .toString()
     .split("\n");
     var webtext="";
+  //Side nav file
+  const sidNavBarPlugDt = fs
+    .readFileSync(`${projectFolderPath}src/login/sidebar.js`)
+    .toString();
+    var raw = "";
+    let firstCard, lastCard, toCpontent, bottomContent, finalContent;
   loadMnuLst.map(objUnInstallMenuName => {
+    
     for (const [key, value] of Object.entries(objUnInstallMenuName)) {
       console.log(`${key} ${value}`);
       const splitUnInstallMenuVal = value.split("./");
-      const unInstallItrSideBarPath = `<li><i className="fa fa-caret-right rightarrow" aria-hidden="true"></i> <Link to="/${
+      const unInstallItrSideBarPath = 
+      `<li><i className="fa fa-caret-right rightarrow" aria-hidden="true"></i> <Link to="/${
         splitUnInstallMenuVal[1]
-      }">${key}</Link></li>`;
-      unInstallSideBarMenuItem.push(unInstallItrSideBarPath);
+      }">${key}</Link></li>`;     
+      // const sideIndx = sidNavBarPlugDt.indexOf(unInstallItrSideBarPath);
+      // sidNavBarPlugDt.slice(sideIndx, 1);
+        raw = sidNavBarPlugDt.indexOf(unInstallItrSideBarPath);
+        firstCard = sidNavBarPlugDt.substring(0,raw).lastIndexOf("<Card>") ;
+        lastCard = raw + sidNavBarPlugDt.substring(raw).indexOf("</Card>");
+        toCpontent =sidNavBarPlugDt.substring(0,raw).slice(0,firstCard);
+        bottomContent= sidNavBarPlugDt.slice(lastCard+"</Card>".length);
+        //sidNavBarPlugDt.slice(0, firstCard) + sidNavBarPlugDt.slice(lastCard);
+        finalContent =toCpontent+"\n"+bottomContent;
+        unInstallSideBarMenuItem.push(unInstallItrSideBarPath);
+
+      //Import Path format and remove index
       const unInstallItrMenuPath = `import ${key} from "../extract_plugins/${pluginName}/${
         splitUnInstallMenuVal[1]
       }";`;
+      const indxImport = dataPlugin.indexOf(unInstallItrMenuPath);
+      dataPlugin.splice(indxImport, 1);
       unInstallImportMenuItem.push(unInstallItrMenuPath);
+
+      //Route path format and remove index
       const unInstallItrRoutePath = `<Route exact path="/${
         splitUnInstallMenuVal[1]
       }" component={${key}} />`;
@@ -234,6 +257,7 @@ app.post("/uninstallapp", function(req, res) {
       
       unInstallRoutePath.push(unInstallItrRoutePath);
     }
+    //Remove import and routes from the file and update document
     fs.writeFile(
       `${projectFolderPath}src/login/root.component.js`,
       webtext,
@@ -241,69 +265,24 @@ app.post("/uninstallapp", function(req, res) {
         if (err) return console.log(err);
       }
     );
+    //Remove li of side nav menu
+    fs.writeFile(`${projectFolderPath}src/login/sidebar.js`, finalContent, function(
+      err
+    ) {
+      if (err) return console.log(err);
+    });
   });
-fs.writeFile(
-        `${projectFolderPath}src/login/root.component.js`,
-        webtext,
-        function(err) {
-          if (err) return console.log(err);
-        }
-      );
   const addNewLineSidebar = unInstallSideBarMenuItem.join("\n");
   const addNewLineImportMenuVal = unInstallImportMenuItem.join("\n");
-  const addNewLineRoutesPathVal = unInstallRoutePath.join("\n");
-  const formatMenu = `<Card>
-                          <Accordion.Toggle as={Card.Header} eventKey="3">
-                            ${parseManifest.plugin_name} <i className="fa fa-angle-down dwnarrow" aria-hidden="true"></i>
-                          </Accordion.Toggle>
-                          <Accordion.Collapse eventKey="3">
-                            <Card.Body>
-                              <div className="leftnavlinks">
-                                <ul>
-                                  <input type="hidden" id="3" />
-                                  ${addNewLineSidebar}
-                                </ul>
-                              </div>
-                            </Card.Body>
-                          </Accordion.Collapse>
-                        </Card>`;
+  const addNewLineRoutesPathVal = unInstallRoutePath.join("\n");  
 
   const pa = "/commissions";
   
   const a = req.body;
   const appendData = addNewLineImportMenuVal;
   const routPathData = addNewLineRoutesPathVal;
-  const inxOfRoutePath = dataPlugin.indexOf(routPathData);
+  const inxOfRoutePath = dataPlugin.indexOf(routPathData); 
   
-  var dta = dataPlugin.indexOf(appendData);
-  if (dta !== -1 && inxOfRoutePath !== -1) {
-    var test = dataPlugin.splice(dta, 1);
-
-    var webtext = dataPlugin.join("\n");
-    //const text = fileArray.join("\n");
-    var test1 = dataPlugin.splice(inxOfRoutePath - 1, 1);
-    var webtext = dataPlugin.join("\n");
-    fs.writeFile(
-      `${projectFolderPath}src/login/root.component.js`,
-      webtext,
-      function(err) {
-        if (err) return console.log(err);
-      }
-    );
-  }
-  const sidNavPlugDt = fs
-    .readFileSync(`${projectFolderPath}src/login/sidebar.js`)
-    .toString()
-    .split("\n");
-  const sideMenuPath = `<li><i className="fa fa-caret-right rightarrow" aria-hidden="true"></i> <Link to="/commissions">COMMISSIONS</Link></li>`;
-  const inxOfSideMenuPath = sidNavPlugDt.indexOf(sideMenuPath);
-  var side1 = sidNavPlugDt.splice(inxOfSideMenuPath, 1);
-  var side2 = sidNavPlugDt.join("\n");
-  fs.writeFile(`${projectFolderPath}src/login/sidebar.js`, side2, function(
-    err
-  ) {
-    if (err) return console.log(err);
-  });
 
   return res.send("test");
 });
