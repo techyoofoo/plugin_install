@@ -206,6 +206,12 @@ app.post("/uninstallapp", function(req, res) {
   let unInstallSideBarMenuItem = [];
   let unInstallImportMenuItem = [];
   let unInstallRoutePath = [];
+  //Read File 
+  const dataPlugin = fs
+    .readFileSync(`${projectFolderPath}src/login/root.component.js`)
+    .toString()
+    .split("\n");
+    var webtext="";
   loadMnuLst.map(objUnInstallMenuName => {
     for (const [key, value] of Object.entries(objUnInstallMenuName)) {
       console.log(`${key} ${value}`);
@@ -221,10 +227,28 @@ app.post("/uninstallapp", function(req, res) {
       const unInstallItrRoutePath = `<Route exact path="/${
         splitUnInstallMenuVal[1]
       }" component={${key}} />`;
+      const indx = dataPlugin.indexOf(unInstallItrRoutePath);
+      dataPlugin.splice(indx, 1);
+      // var test1 = dataPlugin.splice(indx, 1);
+      webtext = dataPlugin.join("\n");
+      
       unInstallRoutePath.push(unInstallItrRoutePath);
     }
+    fs.writeFile(
+      `${projectFolderPath}src/login/root.component.js`,
+      webtext,
+      function(err) {
+        if (err) return console.log(err);
+      }
+    );
   });
-
+fs.writeFile(
+        `${projectFolderPath}src/login/root.component.js`,
+        webtext,
+        function(err) {
+          if (err) return console.log(err);
+        }
+      );
   const addNewLineSidebar = unInstallSideBarMenuItem.join("\n");
   const addNewLineImportMenuVal = unInstallImportMenuItem.join("\n");
   const addNewLineRoutesPathVal = unInstallRoutePath.join("\n");
@@ -245,10 +269,7 @@ app.post("/uninstallapp", function(req, res) {
                         </Card>`;
 
   const pa = "/commissions";
-  const dataPlugin = fs
-    .readFileSync(`${projectFolderPath}src/login/root.component.js`)
-    .toString()
-    .split("\n");
+  
   const a = req.body;
   const appendData = addNewLineImportMenuVal;
   const routPathData = addNewLineRoutesPathVal;
