@@ -193,7 +193,7 @@ app.post("/un-zip", upload.single("file"), function(req, res) {
 
 app.post("/uninstallapp", function(req, res) {
   console.log("Request ", req.body);
-  const pluginName = req.body.pluginName.toLowerCase();
+  const pluginName = req.body.pluginName;
   // Check Manifest file and get menu names and bind to plugin
   const chkManfiestFile = fs
     .readFileSync(`${extractPluginPath}/${pluginName}/manifest.json`)
