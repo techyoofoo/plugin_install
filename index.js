@@ -10,9 +10,9 @@ const lineReader = require("line-reader");
 // const logger = require('morgan');
 // const serveIndex = require('serve-index')
 const extractPluginPath =
-  "/Users/surendranadh/rogue-application/yoofoo_frontend/src/extract_plugins";
+  "/Users/surendranadh/ReactJS/demo_frontend/src/extract_plugins";
 const projectFolderPath =
-  "/Users/surendranadh/rogue-application/yoofoo_frontend/";
+  "/Users/surendranadh/ReactJS/demo_frontend/";
 
 var storage = multer.diskStorage({
   destination: (req, file, cb) => {
@@ -71,7 +71,7 @@ app.post("/un-zip", upload.single("file"), function(req, res) {
     function(err) {
       // extraction is complete. make sure to handle the err
       if (err) throw err;
-      //pwd /Users/surendranadh/rogue-application/yoofoo_frontend/src/login/root.component.js
+      //pwd /Users/surendranadh/rogue-application/yoofoo_frontend/src/login/routes.js
     }
   );
 
@@ -127,7 +127,7 @@ app.post("/un-zip", upload.single("file"), function(req, res) {
                           </Accordion.Collapse>
                         </Card>`;
   const sidNavPlug = fs
-    .readFileSync(`${projectFolderPath}src/login/sidebar.js`)
+    .readFileSync(`${projectFolderPath}src/screens/sidebar.js`)
     .toString();
   //.split("\n");
   //Sub menu adding -----------------------
@@ -150,7 +150,7 @@ app.post("/un-zip", upload.single("file"), function(req, res) {
     "\n" +
     sidNavPlug.substr(lastIndex);
   fs.writeFile(
-    `${projectFolderPath}src/login/sidebar.js`,
+    `${projectFolderPath}src/screens/sidebar.js`,
     lastindexData,
     function(err) {
       if (err) return console.log(err);
@@ -159,7 +159,7 @@ app.post("/un-zip", upload.single("file"), function(req, res) {
   // import CommissionsScreen from "../extract_plugins/comission/comission-screen";
 
   const dataPlugin = fs
-    .readFileSync(`${projectFolderPath}src/login/root.component.js`)
+    .readFileSync(`${projectFolderPath}src/routes/routes.js`)
     .toString()
     .split("\n");
 
@@ -180,7 +180,7 @@ app.post("/un-zip", upload.single("file"), function(req, res) {
     var webtext = dataPlugin.join("\n");
     //const text = fileArray.join("\n");
     fs.writeFile(
-      `${projectFolderPath}src/login/root.component.js`,
+      `${projectFolderPath}src/routes/routes.js`,
       webtext,
       function(err) {
         if (err) return console.log(err);
@@ -208,13 +208,13 @@ app.post("/uninstallapp", function(req, res) {
   let unInstallRoutePath = [];
   //Read File 
   const dataPlugin = fs
-    .readFileSync(`${projectFolderPath}src/login/root.component.js`)
+    .readFileSync(`${projectFolderPath}src/routes/routes.js`)
     .toString()
     .split("\n");
     var webtext="";
   //Side nav file
   const sidNavBarPlugDt = fs
-    .readFileSync(`${projectFolderPath}src/login/sidebar.js`)
+    .readFileSync(`${projectFolderPath}src/screens/sidebar.js`)
     .toString();
     var raw = "";
     let firstCard, lastCard, toCpontent, bottomContent, finalContent;
@@ -259,14 +259,14 @@ app.post("/uninstallapp", function(req, res) {
     }
     //Remove import and routes from the file and update document
     fs.writeFile(
-      `${projectFolderPath}src/login/root.component.js`,
+      `${projectFolderPath}src/routes/routes.js`,
       webtext,
       function(err) {
         if (err) return console.log(err);
       }
     );
     //Remove li of side nav menu
-    fs.writeFile(`${projectFolderPath}src/login/sidebar.js`, finalContent, function(
+    fs.writeFile(`${projectFolderPath}src/screens/sidebar.js`, finalContent, function(
       err
     ) {
       if (err) return console.log(err);
