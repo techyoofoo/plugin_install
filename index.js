@@ -10,9 +10,9 @@ const lineReader = require("line-reader");
 // const logger = require('morgan');
 // const serveIndex = require('serve-index')
 const extractPluginPath =
-  "D:/Rogue/demo_frontend/src/extract_plugins";
+  "/Users/surendranadh/ReactJS/demo_frontend/src/extract_plugins";
 const projectFolderPath =
-  "D:/Rogue/demo_frontend/";
+  "/Users/surendranadh/ReactJS/demo_frontend/";
 
 var storage = multer.diskStorage({
   destination: (req, file, cb) => {
@@ -53,6 +53,47 @@ function get_line(filename, line_no, callback) {
 
   callback(null, lines[+line_no]);
 }
+//Read Meanifest file send response to UI
+app.post("/extract-manifest-data", upload.single("file"), function(req, res) {
+  // console.log(
+  //   "storage location is ",
+  //   req.hostname + "/" + req.file.path,
+  //   req.file.filename
+  // );
+  console.log('--------', req.file)
+  const splitFileName = req.file.filename.split(".");
+  console.log("Splitted File Name", splitFileName[0]);
+  const folder_name = splitFileName[0];
+  extract(
+    req.file.path,
+    {
+      dir: `${extractPluginPath}`
+    },
+    function(err) {
+      // extraction is complete. make sure to handle the err
+      if (err) throw err;
+      //pwd /Users/surendranadh/rogue-application/yoofoo_frontend/src/login/routes.js
+    }
+  );
+
+  // Check Manifest file and get menu names and bind to plugin
+  const chkManfiestFile = fs
+    .readFileSync(`${extractPluginPath}/${splitFileName[0]}/manifest.json`)
+    .toString();
+  const parseManifest = JSON.parse(chkManfiestFile);
+  console.log("----Menu Extraction-----", parseManifest.menu);
+  const manifestJsonData = {
+    "plugin_name": parseManifest.plugin_name,
+    "app_version": parseManifest.version,
+    "app_author": parseManifest.author,
+    "app_copyright": parseManifest.copyright,
+    "app_description": parseManifest.description,
+    "company_name":parseManifest.company_name
+  }
+  console.log('manifestJsonData', manifestJsonData)
+  res.send({"file_info": manifestJsonData})
+})
+
 app.post("/un-zip", upload.single("file"), function(req, res) {
   // debug(req.file);
   console.log(
@@ -81,6 +122,14 @@ app.post("/un-zip", upload.single("file"), function(req, res) {
     .toString();
   const parseManifest = JSON.parse(chkManfiestFile);
   console.log("----Menu Extraction-----", parseManifest.menu);
+  const manifestJsonData = {
+    "plugin_name": parseManifest.plugin_name,
+    "app_version": parseManifest.version,
+    "app_author": parseManifest.author,
+    "app_copyright": parseManifest.copyright,
+    "app_description": parseManifest.description,
+    "company_name":parseManifest.company_name
+  }
   const loadMenuFrmManifest = parseManifest.menu;
 
   let menuItems = [];
@@ -198,7 +247,8 @@ app.post("/un-zip", upload.single("file"), function(req, res) {
     );
   }
 
-  return res.send(req.file);
+  console.log('---Data added', {"file_info":req.file,"data": manifestJsonData})
+  return res.send({"file_info":req.file,"data": manifestJsonData});
 });
 
 app.post("/uninstallapp", function(req, res) {
