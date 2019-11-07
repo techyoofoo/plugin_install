@@ -10,9 +10,9 @@ const lineReader = require("line-reader");
 // const logger = require('morgan');
 // const serveIndex = require('serve-index')
 const extractPluginPath =
-  "/Users/surendranadh/ReactJS/demo_frontend/src/extract_plugins";
+  "D:/Rogue/demo_frontend/src/extract_plugins";
 const projectFolderPath =
-  "/Users/surendranadh/ReactJS/demo_frontend/";
+  "D:/Rogue/demo_frontend/";
 
 var storage = multer.diskStorage({
   destination: (req, file, cb) => {
@@ -160,28 +160,38 @@ app.post("/un-zip", upload.single("file"), function(req, res) {
 
   const dataPlugin = fs
     .readFileSync(`${projectFolderPath}src/routes/routes.js`)
-    .toString()
-    .split("\n");
-
+    .toString();
+    //.split("\n");
+    // const ReadPageData = fs
+    // .readFileSync(`${projectFolderPath}src/routes/routes.js`)
+    // .toString();
+    // const hasConst = ReadPageData.indexOf("constructor()");
+    // const hasRoute = ReadPageData.indexOf("</HashRouter>");
   // console.log('fileLine', fileLine);
   const appendData = importMenuVal;
-  var dta = dataPlugin.indexOf(appendData);
+  var dta = dataPlugin.indexOf(importMenuVal.split('\n')[0]);
   if (dta === -1) {
-    dataPlugin.splice(
-      dataPlugin.findIndex(x => x === "  constructor() {") - 2,
-      0,
-      appendData
-    );
-    dataPlugin.splice(
-      dataPlugin.findIndex(x => x === "      </HashRouter>") - 1,
-      0,
-      routesPathVal
-    );
-    var webtext = dataPlugin.join("\n");
+    const hasConst = dataPlugin.indexOf("export");
+    
+    var addCtr = dataPlugin.substr(0, hasConst) + appendData+"\n" + dataPlugin.substr(hasConst);
+    // dataPlugin.splice(
+    //   dataPlugin.findIndex(x => x === "  constructor() {") - 2,
+    //   0,
+    //   appendData
+    // );
+    const hasRoute = addCtr.indexOf("</div>");
+    const finalstring = addCtr.substr(0, hasRoute) + routesPathVal+"\n" + addCtr.substr(hasRoute);
+
+    // dataPlugin.splice(
+    //   dataPlugin.findIndex(x => x === "      </HashRouter>") - 1,
+    //   0,
+    //   routesPathVal
+    // );
+    //var webtext = dataPlugin.join("\n");
     //const text = fileArray.join("\n");
     fs.writeFile(
       `${projectFolderPath}src/routes/routes.js`,
-      webtext,
+      finalstring,
       function(err) {
         if (err) return console.log(err);
       }
@@ -210,7 +220,7 @@ app.post("/uninstallapp", function(req, res) {
   const dataPlugin = fs
     .readFileSync(`${projectFolderPath}src/routes/routes.js`)
     .toString()
-    .split("\n");
+    .split("\n").map(item => item.replace("\r","").trim());
     var webtext="";
   //Side nav file
   const sidNavBarPlugDt = fs
