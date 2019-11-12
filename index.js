@@ -9,10 +9,11 @@ var fs = require("fs");
 const lineReader = require("line-reader");
 // const logger = require('morgan');
 // const serveIndex = require('serve-index')
+//D:/Rogue/demo_frontend
 const extractPluginPath =
-  "/Users/surendranadh/ReactJS/demo_frontend/src/extract_plugins";
+  "D:/Rogue/demo_frontend/src/extract_plugins";
 const projectFolderPath =
-  "/Users/surendranadh/ReactJS/demo_frontend/";
+  "D:/Rogue/demo_frontend/";
 
 var storage = multer.diskStorage({
   destination: (req, file, cb) => {
@@ -96,6 +97,7 @@ app.post("/extract-manifest-data", upload.single("file"), function(req, res) {
 
 app.post("/un-zip", upload.single("file"), function(req, res) {
   // debug(req.file);
+  let isNew=true;
   console.log(
     "storage location is ",
     req.hostname + "/" + req.file.path,
@@ -138,25 +140,41 @@ app.post("/un-zip", upload.single("file"), function(req, res) {
   loadMenuFrmManifest.map(menuName => {
     // console.log("------Menu List----", menuName.Comissions);
     console.log(Object.entries(menuName));
+
+    const sidNavPlug = fs.readFileSync(`${projectFolderPath}src/screens/sidebar.js`).toString();
     for (const [key, value] of Object.entries(menuName)) {
       // "a 5", "b 7", "c 9";
-      const splitMenuVal = value.split("./");
+      var splitMenuVal = value.split("./");
       console.log(`${key} ${value}`, splitMenuVal[1]);
-      const v = `<li><i className="fa fa-caret-right rightarrow" aria-hidden="true"></i> <Link to="/${
-        splitMenuVal[1]
-      }">${key}</Link></li>`;
-      console.log("---Menu Link---", v);
-      const itrMenuPath = `import ${key} from "../extract_plugins/${folder_name}/${
-        splitMenuVal[1]
-      }";`;
-      const itrRoutePath = `<Route exact path="/${
-        splitMenuVal[1]
-      }" component={${key}} />`;
-      importMenuPath.push(itrMenuPath);
-      routesPath.push(itrRoutePath);
-      menuItems.push(v);
+      if (sidNavPlug.indexOf(splitMenuVal[1]) != -1) {
+        isNew = false;
+        return;
+        //res.writeHead(200, {"Content-Type": "application/json"});
+        //return res.send({"file_info":"","data":"", result:"false"});
+      }
+      else {
+        const v = `<li><i className="fa fa-caret-right rightarrow" aria-hidden="true"></i> <Link to="/${
+          splitMenuVal[1]
+          }">${key}</Link></li>`;
+        console.log("---Menu Link---", v);
+        const itrMenuPath = `import ${key} from "../extract_plugins/${folder_name}/${
+          splitMenuVal[1]
+          }";`;
+        const itrRoutePath = `<Route exact path="/${
+          splitMenuVal[1]
+          }" component={${key}} />`;
+        importMenuPath.push(itrMenuPath);
+        routesPath.push(itrRoutePath);
+        menuItems.push(v);
+      }
     }
   });
+  if(!isNew)
+  {
+    return res.send({"file_info":"","data":"", result:"false"});
+  }
+  else
+  {
   const splitMenuVal = menuItems.join("\n");
   const importMenuVal = importMenuPath.join("\n");
   const routesPathVal = routesPath.join("\n");
@@ -182,15 +200,7 @@ app.post("/un-zip", upload.single("file"), function(req, res) {
   //Sub menu adding -----------------------
   const sideNavAppendData = `<input type="hidden" id="1" />`;
   const indxOfSideNav = sidNavPlug.indexOf(sideNavAppendData);
-  //const newDta =sidNavPlug.substr(0, indxOfSideNav+sideNavAppendData.length) + "\n" +splitMenuVal + (sidNavPlug.substr(indxOfSideNav+sideNavAppendData.length));
-  //Sub menu adding -----------------------
-  // sidNavPlug.slice(
-  //   indxOfSideNav,
-  //   0,
-  //   splitMenuVal
-  // );
 
-  //var webtext1 = sidNavPlug.join("\n");
   const findtext = "</Accordion>";
   const lastIndex = sidNavPlug.lastIndexOf(findtext);
   const lastindexData =
@@ -210,34 +220,16 @@ app.post("/un-zip", upload.single("file"), function(req, res) {
   const dataPlugin = fs
     .readFileSync(`${projectFolderPath}src/routes/routes.js`)
     .toString();
-    //.split("\n");
-    // const ReadPageData = fs
-    // .readFileSync(`${projectFolderPath}src/routes/routes.js`)
-    // .toString();
-    // const hasConst = ReadPageData.indexOf("constructor()");
-    // const hasRoute = ReadPageData.indexOf("</HashRouter>");
-  // console.log('fileLine', fileLine);
   const appendData = importMenuVal;
   var dta = dataPlugin.indexOf(importMenuVal.split('\n')[0]);
   if (dta === -1) {
     const hasConst = dataPlugin.indexOf("export");
     
     var addCtr = dataPlugin.substr(0, hasConst) + appendData+"\n" + dataPlugin.substr(hasConst);
-    // dataPlugin.splice(
-    //   dataPlugin.findIndex(x => x === "  constructor() {") - 2,
-    //   0,
-    //   appendData
-    // );
+
     const hasRoute = addCtr.indexOf("</div>");
     const finalstring = addCtr.substr(0, hasRoute) + routesPathVal+"\n" + addCtr.substr(hasRoute);
 
-    // dataPlugin.splice(
-    //   dataPlugin.findIndex(x => x === "      </HashRouter>") - 1,
-    //   0,
-    //   routesPathVal
-    // );
-    //var webtext = dataPlugin.join("\n");
-    //const text = fileArray.join("\n");
     fs.writeFile(
       `${projectFolderPath}src/routes/routes.js`,
       finalstring,
@@ -246,9 +238,9 @@ app.post("/un-zip", upload.single("file"), function(req, res) {
       }
     );
   }
-
   console.log('---Data added', {"file_info":req.file,"data": manifestJsonData})
-  return res.send({"file_info":req.file,"data": manifestJsonData});
+  return res.send({"file_info":req.file,"data": manifestJsonData, result:"true"});
+  }
 });
 
 app.post("/uninstallapp", function(req, res) {
